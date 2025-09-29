@@ -1,24 +1,21 @@
-// LeaveMeAlone Game by Netologiya. All RightsReserved.
+// LeaveMeAlone Game by Netologiya. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h"
 #include "LMADamageActor.generated.h"
+
+class USphereComponent;
+class UStaticMeshComponent;
 
 UCLASS()
 class LEAVEMEALONE_API ALMADamageActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	ALMADamageActor();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USphereComponent* SphereComponent;
 
@@ -29,10 +26,11 @@ protected:
 	float Damage = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float SphereRadius = 100.0f;	
+	float SphereRadius = 100.0f;
 
-public:	
-	// Called every frame
+protected:
+	virtual void BeginPlay() override;
+
+public:
 	virtual void Tick(float DeltaTime) override;
-
 };

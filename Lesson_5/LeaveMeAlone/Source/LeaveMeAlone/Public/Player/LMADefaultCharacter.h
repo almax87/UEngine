@@ -3,21 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
-#include "Components/DecalComponent.h"
-#include "Components/InputComponent.h"
-#include "Components/LMAHealthComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/Character.h"
 #include "LMADefaultCharacter.generated.h"
 
 class UCameraComponent;
 class USpringArmComponent;
 class ULMAHealthComponent;
+class ULMAWeaponComponent;
 class UAnimMontage;
-
 
 UCLASS()
 class LEAVEMEALONE_API ALMADefaultCharacter : public ACharacter
@@ -27,12 +20,18 @@ class LEAVEMEALONE_API ALMADefaultCharacter : public ACharacter
 public:
 	ALMADefaultCharacter();
 
+	UFUNCTION()
+	ULMAHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArmComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UCameraComponent* CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components|Health")
+	ULMAHealthComponent* HealthComponent;
 
 	UPROPERTY()
 	UDecalComponent* CurrentCursor = nullptr;
@@ -43,23 +42,19 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	FVector CursorSize = FVector(20.0f, 40.0f, 40.0f);
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components|Health")
-	ULMAHealthComponent* HealthComponent;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* DeathMontage;
 
 	virtual void BeginPlay() override;
 
-	void OnHealthChanged(float NewHealth);
-
 public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	ULMAWeaponComponent* WeaponComponent;
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION()
-	ULMAHealthComponent* GetHealthComponent() const { return HealthComponent; }
 
 private:
 	float YRotation = -75.0f;
@@ -70,6 +65,9 @@ private:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
 	void OnDeath();
+	void OnHealthChanged(float NewHealth);
+
 	void RotationPlayerOnCursor();
 };
