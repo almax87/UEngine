@@ -36,6 +36,8 @@ ALMADefaultCharacter::ALMADefaultCharacter()
 	bUseControllerRotationRoll = false;
 
 	WeaponComponent = CreateDefaultSubobject<ULMAWeaponComponent>("Weapon");
+
+	CurrentStamina = MaxStamina;
 }
 
 void ALMADefaultCharacter::BeginPlay()
@@ -50,6 +52,8 @@ void ALMADefaultCharacter::BeginPlay()
 	OnHealthChanged(HealthComponent->GetHealth());
 	HealthComponent->OnDeath.AddUObject(this, &ALMADefaultCharacter::OnDeath);
 	HealthComponent->OnHealthChanged.AddUObject(this, &ALMADefaultCharacter::OnHealthChanged);
+
+	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 }
 
 void ALMADefaultCharacter::Tick(float DeltaTime)
@@ -58,6 +62,7 @@ void ALMADefaultCharacter::Tick(float DeltaTime)
 	if (!(HealthComponent->IsDead()))
 	{
 		RotationPlayerOnCursor();
+		UpdateStamina(DeltaTime);
 	}
 }
 
@@ -70,6 +75,8 @@ void ALMADefaultCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponComponent, &ULMAWeaponComponent::Fire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, WeaponComponent, &ULMAWeaponComponent::StopFire);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &ULMAWeaponComponent::Reload);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ALMADefaultCharacter::StartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ALMADefaultCharacter::StopSprint);
 }
 
 void ALMADefaultCharacter::MoveForward(float Value)
@@ -82,6 +89,46 @@ void ALMADefaultCharacter::MoveRight(float Value)
 	AddMovementInput(GetActorRightVector(), Value);
 }
 
+void ALMADefaultCharacter::StartSprint()
+{
+	if (CanSprint())
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	}
+}
+
+void ALMADefaultCharacter::StopSprint()
+{
+	bIsSprinting = false;
+	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+}
+
+bool ALMADefaultCharacter::CanSprint() const
+{
+	return !HealthComponent->IsDead() && CurrentStamina > 0.0f && (FMath::Abs(GetVelocity().Size()) > 0.1f); // Only can sprint when moving
+}
+
+void ALMADefaultCharacter::UpdateStamina(float DeltaTime)
+{
+	if (bIsSprinting && CanSprint())
+	{
+		// Drain stamina while sprinting
+		CurrentStamina = FMath::Clamp(CurrentStamina - (StaminaDrainRate * DeltaTime), 0.0f, MaxStamina);
+
+		// Stop sprinting if stamina is depleted
+		if (CurrentStamina <= 0.0f)
+		{
+			StopSprint();
+		}
+	}
+	else
+	{
+		// Regenerate stamina when not sprinting
+		CurrentStamina = FMath::Clamp(CurrentStamina + (StaminaRegenRate * DeltaTime), 0.0f, MaxStamina);
+	}
+}
+
 void ALMADefaultCharacter::OnDeath()
 {
 	CurrentCursor->DestroyRenderState_Concurrent();
@@ -89,6 +136,8 @@ void ALMADefaultCharacter::OnDeath()
 	PlayAnimMontage(DeathMontage);
 
 	GetCharacterMovement()->DisableMovement();
+
+	StopSprint(); // Ensure sprint stops on death
 
 	SetLifeSpan(5.0f);
 

@@ -23,6 +23,9 @@ public:
 	UFUNCTION()
 	ULMAHealthComponent* GetHealthComponent() const { return HealthComponent; }
 
+		UFUNCTION(BlueprintCallable, Category = "Sprint")
+	bool IsSprinting() const { return bIsSprinting; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArmComponent;
@@ -45,7 +48,32 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* DeathMontage;
 
+	    // Sprint variables
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sprint")
+	float MaxStamina = 100.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sprint")
+	float StaminaDrainRate = 20.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sprint")
+	float StaminaRegenRate = 15.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sprint")
+	float SprintSpeed = 600.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sprint")
+	float NormalSpeed = 300.0f;
+
+	// Sprint functions
+	UFUNCTION(BlueprintCallable, Category = "Sprint")
+	bool CanSprint() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Sprint")
+	float GetStamina() const { return CurrentStamina; }
+
+
 	virtual void BeginPlay() override;
+
 
 public:
 
@@ -63,6 +91,12 @@ private:
 
 	float FOV = 55.0f;
 
+	bool bIsSprinting = false;
+	float CurrentStamina = 0.0f;
+
+	void StartSprint();
+	void StopSprint();
+
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
@@ -70,4 +104,7 @@ private:
 	void OnHealthChanged(float NewHealth);
 
 	void RotationPlayerOnCursor();
+
+	    // Stamina management
+	void UpdateStamina(float DeltaTime);
 };
